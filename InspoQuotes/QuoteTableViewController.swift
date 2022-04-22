@@ -7,8 +7,14 @@
 //
 
 import UIKit
+import StoreKit
 
-class QuoteTableViewController: UITableViewController {
+class QuoteTableViewController: UITableViewController, SKPaymentTransactionObserver {
+
+ 
+    
+    
+    let productID = "com.londonappbrewery.InspoQuotes.PremiumQuotes"
     
     var quotesToShow = [
         "Our greatest glory is not in never falling, but in rising every time we fall. — Confucius",
@@ -30,6 +36,8 @@ class QuoteTableViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        SKPaymentQueue.default().add(self)
 
       
     }
@@ -71,8 +79,43 @@ class QuoteTableViewController: UITableViewController {
     // MARK: - In-App Purchase Methods
     
     func buyPremiumQoutes() {
-        
+        if SKPaymentQueue.canMakePayments() {
+            // Can make payments
+            
+            let paymentRequest = SKMutablePayment()
+            paymentRequest.productIdentifier = productID
+            SKPaymentQueue.default().add(paymentRequest)
+            
+            
+        } else {
+            // Can't make payments
+            print("User can't make payments")
+        }
     }
+    
+    func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+     
+        for transaction in transactions {
+            if transaction.transactionState == .purchased {
+                // User payment successful
+                print("Transaction successful!")
+                
+                SKPaymentQueue.default().finishTransaction(transaction)
+                
+            } else {
+                // Payment failed
+                
+                if let error = transaction.error {
+                    let errorDescription = error.localizedDescription
+                    print("Transaction failed due to error: \(errorDescription)")
+                }
+                
+                SKPaymentQueue.default().finishTransaction(transaction)
+                
+            }
+        }
+    }
+    
     
     
     @IBAction func restorePressed(_ sender: UIBarButtonItem) {
